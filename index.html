@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>売上目標カリキュレーター</title>
+
+<!-- iPhoneでホーム画面に追加した時に「アプリらしく」全画面表示するための設定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="売上目標">
+<meta name="theme-color" content="#0a0a0a">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500;700&display=swap');
+
+  :root{
+    --bg: #0a0a0a;
+    --bg-panel: #131313;
+    --line: #2a2a2a;
+    --gold: #c9a24b;
+    --gold-soft: rgba(201,162,75,0.35);
+    --white: #f5f4f1;
+    --dim: #8a8a86;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{
+    height:100%;
+    background:var(--bg);
+    color:var(--white);
+    font-family:'Noto Sans JP', sans-serif;
+    font-weight:300;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px;
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(201,162,75,0.07), transparent 60%),
+      var(--bg);
+  }
+
+  .app{
+    width:100%;
+    max-width:480px;
+  }
+
+  /* ---- Header ---- */
+  header{
+    text-align:center;
+    margin-bottom:36px;
+  }
+  .eyebrow{
+    letter-spacing:0.35em;
+    font-size:11px;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  h1{
+    font-family:'Cormorant Garamond', serif;
+    font-weight:500;
+    font-size:32px;
+    letter-spacing:0.02em;
+    color:var(--white);
+  }
+  h1 span{ color:var(--gold); }
+
+  /* ---- Panel ---- */
+  .panel{
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:32px 28px;
+    position:relative;
+  }
+  .panel::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold-soft), transparent);
+  }
+
+  .field{
+    margin-bottom:22px;
+  }
+  .field:last-child{ margin-bottom:0; }
+
+  label{
+    display:block;
+    font-size:12px;
+    letter-spacing:0.08em;
+    color:var(--dim);
+    margin-bottom:8px;
+  }
+
+  .input-wrap{
+    position:relative;
+    display:flex;
+    align-items:baseline;
+    border-bottom:1px solid var(--line);
+    transition:border-color .25s ease;
+  }
+  .input-wrap:focus-within{
+    border-color:var(--gold);
+  }
+  .unit{
+    font-size:13px;
+    color:var(--dim);
+    padding-bottom:10px;
+    white-space:nowrap;
+  }
+
+  input[type="number"]{
+    flex:1;
+    width:100%;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--white);
+    font-family:'Cormorant Garamond', serif;
+    font-size:26px;
+    font-weight:500;
+    padding:6px 8px 10px 0;
+    -moz-appearance:textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  input[type="number"]::placeholder{
+    color:#4a4a47;
+  }
+
+  /* ---- Divider ---- */
+  .divider{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin:32px 0 28px;
+  }
+  .divider::before, .divider::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+  .divider span{
+    font-size:10px;
+    letter-spacing:0.3em;
+    color:var(--gold);
+    text-transform:uppercase;
+  }
+
+  /* ---- Results ---- */
+  .results{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+
+  .result-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:18px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .result-row:last-child{
+    border-bottom:none;
+  }
+
+  .result-label{
+    font-size:13px;
+    color:var(--dim);
+    letter-spacing:0.03em;
+    max-width:150px;
+    line-height:1.5;
+  }
+
+  .result-value{
+    text-align:right;
+  }
+  .result-value .num{
+    font-family:'Cormorant Garamond', serif;
+    font-size:30px;
+    font-weight:600;
+    color:var(--gold);
+    letter-spacing:0.01em;
+  }
+  .result-value .num.plain{ color:var(--white); }
+  .result-value .suffix{
+    font-size:12px;
+    color:var(--dim);
+    margin-left:4px;
+  }
+
+  /* progress ring row */
+  .progress-block{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    padding-bottom:24px;
+    margin-bottom:4px;
+    border-bottom:1px solid var(--line);
+  }
+  .ring-wrap{ position:relative; width:76px; height:76px; flex:0 0 auto; }
+  .ring-wrap svg{ width:100%; height:100%; transform:rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:var(--line); stroke-width:4; }
+  .ring-fg{ fill:none; stroke:var(--gold); stroke-width:4; stroke-linecap:round; transition:stroke-dasharray .5s ease; }
+  .ring-label{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond', serif;
+    font-size:15px;
+    color:var(--white);
+  }
+  .progress-text{
+    flex:1;
+  }
+  .progress-text .t1{
+    font-size:11px;
+    letter-spacing:0.15em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .progress-text .t2{
+    font-size:13px;
+    color:var(--dim);
+    line-height:1.6;
+  }
+
+  footer{
+    text-align:center;
+    margin-top:24px;
+    font-size:11px;
+    letter-spacing:0.15em;
+    color:#4a4a47;
+    text-transform:uppercase;
+  }
+
+  @media (max-width:400px){
+    .panel{ padding:26px 20px; }
+    h1{ font-size:26px; }
+    .result-value .num{ font-size:24px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="eyebrow">Sales Goal</div>
+    <h1>売上目標<span>カリキュレーター</span></h1>
+  </header>
+
+  <div class="panel">
+
+    <div class="field">
+      <label for="goal">月間売上目標</label>
+      <div class="input-wrap">
+        <input type="number" id="goal" inputmode="numeric" placeholder="0" value="1000000">
+        <span class="unit">円</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="current">現在の売上</label>
+      <div class="input-wrap">
+        <input type="number" id="current" inputmode="numeric" placeholder="0" value="600000">
+        <span class="unit">円</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="days">残り営業日</label>
+      <div class="input-wrap">
+        <input type="number" id="days" inputmode="numeric" placeholder="0" value="10">
+        <span class="unit">日</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="price">平均客単価</label>
+      <div class="input-wrap">
+        <input type="number" id="price" inputmode="numeric" placeholder="0" value="8000">
+        <span class="unit">円</span>
+      </div>
+    </div>
+
+    <div class="divider"><span>Result</span></div>
+
+    <div class="progress-block">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 80 80">
+          <circle class="ring-bg" cx="40" cy="40" r="34"></circle>
+          <circle class="ring-fg" id="ringFg" cx="40" cy="40" r="34" stroke-dasharray="0 214"></circle>
+        </svg>
+        <div class="ring-label" id="ringLabel">0%</div>
+      </div>
+      <div class="progress-text">
+        <div class="t1">達成率</div>
+        <div class="t2" id="progressNote">目標に対する現在の進捗です</div>
+      </div>
+    </div>
+
+    <div class="results">
+      <div class="result-row">
+        <div class="result-label">目標まで残り</div>
+        <div class="result-value">
+          <span class="num" id="remainAmount">¥0</span>
+        </div>
+      </div>
+      <div class="result-row">
+        <div class="result-label">1日あたり<br>必要な売上</div>
+        <div class="result-value">
+          <span class="num" id="perDay">¥0</span>
+        </div>
+      </div>
+      <div class="result-row">
+        <div class="result-label">あと必要な<br>お客様の人数</div>
+        <div class="result-value">
+          <span class="num" id="perCustomers">0</span>
+          <span class="suffix">人</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>Precision, styled for the salon chair</footer>
+</div>
+
+<script>
+  const goalEl = document.getElementById('goal');
+  const currentEl = document.getElementById('current');
+  const daysEl = document.getElementById('days');
+  const priceEl = document.getElementById('price');
+
+  const remainAmountEl = document.getElementById('remainAmount');
+  const perDayEl = document.getElementById('perDay');
+  const perCustomersEl = document.getElementById('perCustomers');
+  const ringFg = document.getElementById('ringFg');
+  const ringLabel = document.getElementById('ringLabel');
+  const progressNote = document.getElementById('progressNote');
+
+  const CIRC = 2 * Math.PI * 34; // ≈213.6
+
+  function yen(n){
+    if (!isFinite(n)) n = 0;
+    n = Math.max(0, Math.round(n));
+    return '¥' + n.toLocaleString('ja-JP');
+  }
+
+  function calc(){
+    const goal = parseFloat(goalEl.value) || 0;
+    const current = parseFloat(currentEl.value) || 0;
+    const days = parseFloat(daysEl.value) || 0;
+    const price = parseFloat(priceEl.value) || 0;
+
+    const remain = Math.max(goal - current, 0);
+    const perDay = days > 0 ? remain / days : 0;
+    const customers = price > 0 ? Math.ceil(remain / price) : 0;
+
+    remainAmountEl.textContent = yen(remain);
+    perDayEl.textContent = yen(perDay);
+    perCustomersEl.textContent = (isFinite(customers) ? customers : 0).toLocaleString('ja-JP');
+
+    let ratio = goal > 0 ? current / goal : 0;
+    ratio = Math.max(0, Math.min(1, ratio));
+    const offset = CIRC * ratio;
+    ringFg.setAttribute('stroke-dasharray', offset + ' ' + CIRC);
+    ringLabel.textContent = Math.round(ratio * 100) + '%';
+
+    if (remain <= 0 && goal > 0){
+      progressNote.textContent = 'すでに目標を達成しています';
+    } else if (days <= 0 && remain > 0){
+      progressNote.textContent = '残り営業日を入力してください';
+    } else {
+      progressNote.textContent = '目標に対する現在の進捗です';
+    }
+  }
+
+  [goalEl, currentEl, daysEl, priceEl].forEach(el=>{
+    el.addEventListener('input', calc);
+  });
+
+  calc();
+</script>
+
+</body>
+</html>
