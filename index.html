@@ -49,7 +49,6 @@
     max-width:480px;
   }
 
-  /* ---- Header ---- */
   header{
     text-align:center;
     margin-bottom:36px;
@@ -70,7 +69,6 @@
   }
   h1 span{ color:var(--gold); }
 
-  /* ---- Panel ---- */
   .panel{
     background:var(--bg-panel);
     border:1px solid var(--line);
@@ -138,7 +136,6 @@
     color:#4a4a47;
   }
 
-  /* ---- Divider ---- */
   .divider{
     display:flex;
     align-items:center;
@@ -158,7 +155,6 @@
     text-transform:uppercase;
   }
 
-  /* ---- Results ---- */
   .results{
     display:flex;
     flex-direction:column;
@@ -201,7 +197,6 @@
     margin-left:4px;
   }
 
-  /* progress ring row */
   .progress-block{
     display:flex;
     align-items:center;
@@ -351,7 +346,7 @@
   const ringLabel = document.getElementById('ringLabel');
   const progressNote = document.getElementById('progressNote');
 
-  const CIRC = 2 * Math.PI * 34; // ≈213.6
+  const CIRC = 2 * Math.PI * 34;
 
   function yen(n){
     if (!isFinite(n)) n = 0;
@@ -388,10 +383,40 @@
     }
   }
 
+  const STORAGE_KEY = 'salonSalesGoalInputs';
+
+  function save(){
+    const data = {
+      goal: goalEl.value,
+      current: currentEl.value,
+      days: daysEl.value,
+      price: priceEl.value
+    };
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }catch(e){}
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data.goal !== undefined) goalEl.value = data.goal;
+      if (data.current !== undefined) currentEl.value = data.current;
+      if (data.days !== undefined) daysEl.value = data.days;
+      if (data.price !== undefined) priceEl.value = data.price;
+    }catch(e){}
+  }
+
   [goalEl, currentEl, daysEl, priceEl].forEach(el=>{
-    el.addEventListener('input', calc);
+    el.addEventListener('input', ()=>{
+      calc();
+      save();
+    });
   });
 
+  load();
   calc();
 </script>
 
